@@ -11,7 +11,7 @@ import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import { clusterApiUrl } from "@solana/web3.js";
 import "@solana/wallet-adapter-react-ui/styles.css";
 
-import { WalletConnectWalletAdapter } from "@walletconnect/solana-adapter";
+import { WalletConnectWalletAdapter } from "@solana/wallet-adapter-walletconnect";
 
 export const SolanaContext = ({ children }: { children: React.ReactNode }) => {
   const network = WalletAdapterNetwork.Devnet;
