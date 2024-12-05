@@ -1,0 +1,107 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.wheel {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 10px solid #ccc;
+}
+
+.wheel-inner {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  transform: rotate(0deg);
+}
+
+.segment {
+  position: absolute;
+  width: 50%;
+  height: 50%;
+  background-color: #f00; /* Default color */
+  border: 1px solid #fff;
+  transform-origin: 100% 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: white;
+}
+
+/* Define each segment with equal angles */
+.segment-0 {
+  background-color: #ff5733;
+  transform: rotate(0deg);
+}
+.segment-1 {
+  background-color: #33ff57;
+  transform: rotate(60deg);
+}
+.segment-2 {
+  background-color: #3357ff;
+  transform: rotate(120deg);
+}
+.segment-3 {
+  background-color: #ff33a1;
+  transform: rotate(180deg);
+}
+.segment-4 {
+  background-color: #a1ff33;
+  transform: rotate(240deg);
+}
+.segment-5 {
+  background-color: #33a1ff;
+  transform: rotate(300deg);
+}
+
+.pointer {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 24px;
+}
+
+.wheel.spinning {
+  animation: spin 3s ease-in-out forwards;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
