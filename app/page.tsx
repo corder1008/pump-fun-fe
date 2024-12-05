@@ -1,5 +1,4 @@
 "use client";
-import Image from "next/image";
 import { useEffect, useState } from "react";
 
 import { useWallet } from "@solana/wallet-adapter-react";
@@ -8,7 +7,7 @@ import { SpinWheel } from "react-spin-wheel";
 import "react-spin-wheel/dist/index.css";
 
 const addresses = [
-  "UX67BbVRdmixHYoxUH62grWQXMmMPsj2vj5qDNRpump", // Replace with actual addresses
+  "UX67BbVRdmixHYoxUH62grWQXMmMPsj2vj5qDNRpump",
   "7UBk39uC5u6z9NSZKbK7uEMnucjyzqM3Rn9hM2wzpump",
   "3RFRdgDmFsgRH4MzdGQnPR2iEFMWThS7jPFj51Y9pump",
   "iRWRYogiXBuCXE1ip7GiE8qbAHV11cLUW5QmQ2bpump",
@@ -20,6 +19,10 @@ export default function Home() {
   const [solAmount, setSolAmount] = useState("");
   const [selectedAddress, setSelectedAddress] = useState("");
   const { connected } = useWallet();
+
+  useEffect(() => {
+    console.log(selectedAddress);
+  }, [selectedAddress]);
 
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen pb-20 gap-16 p-6 font-[family-name:var(--font-geist-sans)]">
