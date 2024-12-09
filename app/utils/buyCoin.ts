@@ -12,7 +12,7 @@ import {
 } from "@solana/spl-token";
 import axios from "axios";
 
-async function getTokenData(mintStr: string, retries = 3, delay = 6000) {
+export async function getTokenData(mintStr: string, retries = 5, delay = 6000) {
   const url = `/api/coins`;
 
   for (let attempt = 0; attempt < retries; attempt++) {
@@ -46,17 +46,14 @@ export const createBuyInstruction = async (
   walletPubkey: PublicKey,
   coinAddress: string,
   amount: number,
-  txBuilder: Transaction
+  txBuilder: Transaction,
+  tokenData: any
 ) => {
   console.log("params:", walletPubkey, coinAddress, amount);
   const connection = new Connection(process.env.NEXT_PUBLIC_RPC_URL!);
   const coinPubkey = new PublicKey(coinAddress);
 
   const amountLamports = amount * LAMPORTS_PER_SOL;
-
-  const tokenData = await getTokenData(coinAddress);
-
-  console.log("tokenData:", tokenData, walletPubkey, coinPubkey);
 
   const GLOBAL = new PublicKey("4wTV1YmiEkRvAtNtsSGPtUrqRYQMe5SKy2uB4Jjaxnjf");
   const FEE_RECIPIENT = new PublicKey(

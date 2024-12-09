@@ -4,17 +4,19 @@ import { useState } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { Header } from "./components/Header";
 import { Transaction, Connection, PublicKey } from "@solana/web3.js";
-import { SpinWheel } from "react-spin-wheel";
 import { Loading } from "notiflix";
+import { SpinWheel } from "./components/SpinWheel";
 
 import "react-spin-wheel/dist/index.css";
-import { createBuyInstruction } from "./utils/buyCoin";
+import { createBuyInstruction, getTokenData } from "./utils/buyCoin";
 
 export default function Home() {
   const [solAmount, setSolAmount] = useState("");
-  const [selectedAddress, setSelectedAddress] = useState("");
   const { connected, publicKey } = useWallet();
   const { sendTransaction } = useWallet();
+  const [isSpinning, setIsSpinning] = useState(false);
+  const predefinedAmounts = [0.1, 0.5, 1, 2, 5, 10];
+
   const normalizedPublicKey = publicKey
     ? new PublicKey(publicKey.toString())
     : null;
@@ -39,7 +41,20 @@ export default function Home() {
     return `${address.slice(0, 4)}...${address.slice(-4)}`;
   };
 
-  const buyCoin = async (tokenAddress: string, amount: number) => {
+  const buyCoin = () => {
+    if (!connected || !publicKey) {
+      alert("Please connect your wallet first!");
+      return;
+    }
+    if (!solAmount) {
+      alert("Please enter an amount!");
+      return;
+    }
+
+    setIsSpinning(true);
+  };
+
+  const handleTransaction = async (tokenAddress: string, amount: number) => {
     const txBuilder = new Transaction();
     const connection = new Connection(process.env.NEXT_PUBLIC_RPC_URL!);
     if (!connected || !publicKey) {
@@ -48,39 +63,43 @@ export default function Home() {
     }
     try {
       Loading.standard();
-
-      console.log("publicKey:", publicKey);
+      const tokenData = await getTokenData(tokenAddress);
+      console.log("tokenData:", tokenData["symbol"]);
       const instruction = await createBuyInstruction(
         normalizedPublicKey!,
         tokenAddress,
         amount,
-        txBuilder
+        txBuilder,
+        tokenData
       );
-      console.log("instruction:", instruction);
       txBuilder.add(instruction.instruction);
-
-      console.log("fee_address:", process.env.NEXT_PUBLIC_FEE_ADDRESS);
-      console.log(
-        "fee_address_amount:",
-        process.env.NEXT_PUBLIC_FEE_ADDRESS_AMOUNT
-      );
-
       txBuilder.feePayer = publicKey;
 
-      console.log("txBuilder:", txBuilder);
+      try {
+        const signature = await sendTransaction(txBuilder, connection);
+        console.log("Transaction sent:", signature);
 
-      const signature = await sendTransaction(txBuilder, connection);
-      console.log("Transaction sent:", signature);
-
-      const confirmation = await connection.confirmTransaction(
-        signature,
-        "confirmed"
-      );
-      console.log("Transaction confirmed:", confirmation);
-      Loading.remove();
-      const txUrl = `https://explorer.solana.com/tx/${signature}`;
-      addLog(`Transaction URL: ${txUrl}`);
-      alert("Purchase successful!");
+        const confirmation = await connection.confirmTransaction(
+          signature,
+          "confirmed"
+        );
+        console.log("Transaction confirmed:", confirmation);
+        Loading.remove();
+        const txUrl = `https://explorer.solana.com/tx/${signature}`;
+        addLog(
+          `You received ${instruction.tokenAmount} ${tokenData["symbol"]} tokens for ${amount} SOL - ${txUrl}`
+        );
+        alert("Purchase successful!");
+      } catch (txError: any) {
+        Loading.remove();
+        if (txError.message.includes("User rejected")) {
+          addLog("Transaction cancelled by user");
+          console.log("User cancelled the transaction");
+          return; // Exit gracefully
+        }
+        addLog(`Transaction failed: ${txError.message}`);
+        throw txError;
+      }
     } catch (error) {
       Loading.remove();
       console.error("Error:", error);
@@ -115,20 +134,26 @@ export default function Home() {
     tokenAssociatedAddress: address.tokenAssociatedAddress,
   }));
 
+  const wheelItems = addresses.map((addr) => ({
+    value: addr.value,
+    tokenAddress: addr.id.tokenAddress,
+  }));
+
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen pb-20 gap-16 p-6 font-[family-name:var(--font-geist-sans)]">
       <Header />
       <main className="flex flex-col gap-8 row-start-2 items-center w-full">
         <div className="wheel-container">
           <SpinWheel
-            items={addresses.map((addr) => addr.value)}
-            onFinishSpin={(item) => {
-              const fullAddress = addresses.find(
-                (addr) => addr.value === item
-              )?.id;
-              setSelectedAddress(fullAddress?.tokenAddress as string);
+            items={wheelItems}
+            onFinishSpin={async (selectedItem) => {
+              setIsSpinning(false);
+              await handleTransaction(
+                selectedItem.tokenAddress,
+                parseFloat(solAmount)
+              );
             }}
-            size={300}
+            isSpinning={isSpinning}
           />
         </div>
         <input
@@ -138,11 +163,22 @@ export default function Home() {
           onChange={(e) => setSolAmount(e.target.value)}
           className="border rounded p-2"
         />
+        <div className="flex flex-col items-center gap-4">
+          <div className="flex flex-wrap gap-2 justify-center">
+            {predefinedAmounts.map((amount) => (
+              <button
+                key={amount}
+                onClick={() => setSolAmount(amount.toString())}
+                className="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm transition-colors"
+              >
+                {amount} SOL
+              </button>
+            ))}
+          </div>
+        </div>
         <button
           className="bg-green-500 text-white px-4 py-2 rounded"
-          onClick={async () =>
-            await buyCoin(selectedAddress, parseFloat(solAmount))
-          }
+          onClick={async () => buyCoin()}
         >
           {connected ? "Buy a Coin" : "Connect Wallet"}
         </button>
