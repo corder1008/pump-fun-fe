@@ -2,9 +2,8 @@
 import { useEffect, useState } from "react";
 
 import { useWallet } from "@solana/wallet-adapter-react";
-import { LAMPORTS_PER_SOL, SystemProgram, PublicKey } from "@solana/web3.js";
 import { Header } from "./components/Header";
-import { Transaction, ComputeBudgetProgram, Connection } from "@solana/web3.js";
+import { Transaction, Connection } from "@solana/web3.js";
 import { SpinWheel } from "react-spin-wheel";
 
 import "react-spin-wheel/dist/index.css";
