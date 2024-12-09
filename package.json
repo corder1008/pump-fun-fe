@@ -9,12 +9,17 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@cryptoscan/pumpfun-sdk": "^1.3.0",
+    "@cryptoscan/solana-send-transaction": "^0.5.4",
+    "@cryptoscan/solana-wallet-sdk": "^0.0.9",
     "@solana/wallet-adapter-react": "^0.15.35",
     "@solana/wallet-adapter-react-ui": "^0.9.35",
     "@solana/wallet-adapter-walletconnect": "^0.1.16",
+    "axios": "^1.7.9",
     "next": "15.0.3",
-    "react": "19.0.0-rc-66855b96-20241106",
-    "react-dom": "19.0.0-rc-66855b96-20241106",
+    "pumpdotfun-sdk": "^1.3.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "react-spin-wheel": "^0.0.7"
   },
   "devDependencies": {
