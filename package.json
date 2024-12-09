@@ -17,6 +17,7 @@
     "@solana/wallet-adapter-walletconnect": "^0.1.16",
     "axios": "^1.7.9",
     "next": "15.0.3",
+    "notiflix": "^3.2.7",
     "pumpdotfun-sdk": "^1.3.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

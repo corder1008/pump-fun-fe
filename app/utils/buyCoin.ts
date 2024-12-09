@@ -12,21 +12,28 @@ import {
 } from "@solana/spl-token";
 import axios from "axios";
 
-async function getTokenData(mintStr: string) {
-  try {
-    const url = `/api/coins`;
-    const response = await axios.post(url, { mintStr });
+async function getTokenData(mintStr: string, retries = 3, delay = 6000) {
+  const url = `/api/coins`;
 
-    if (response.status === 200) {
-      return response.data;
-    } else {
-      console.log("Failed to retrieve coin data:", response.status);
-      return null;
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      const response = await axios.post(url, { mintStr });
+
+      if (response.status === 200) {
+        return response.data;
+      } else {
+        console.log("Failed to retrieve coin data:", response.status);
+      }
+    } catch (error) {
+      console.log("Error fetching coin data:", error);
     }
-  } catch (error) {
-    console.log("Error fetching coin data:", error);
-    return null;
+
+    if (attempt < retries - 1) {
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
   }
+
+  return null;
 }
 
 function bufferFromUInt64(value: number | string) {

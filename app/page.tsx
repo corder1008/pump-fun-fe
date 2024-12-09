@@ -5,6 +5,7 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { Header } from "./components/Header";
 import { Transaction, Connection, PublicKey } from "@solana/web3.js";
 import { SpinWheel } from "react-spin-wheel";
+import { Loading } from "notiflix";
 
 import "react-spin-wheel/dist/index.css";
 import { createBuyInstruction } from "./utils/buyCoin";
@@ -17,6 +18,21 @@ export default function Home() {
   const normalizedPublicKey = publicKey
     ? new PublicKey(publicKey.toString())
     : null;
+
+  const [txLogs, setTxLogs] = useState<
+    Array<{ message: string; timestamp: string }>
+  >([]);
+
+  // Add this function to add logs
+  const addLog = (message: string) => {
+    setTxLogs((prev) => [
+      ...prev,
+      {
+        message,
+        timestamp: new Date().toLocaleTimeString(),
+      },
+    ]);
+  };
 
   const shortenAddress = (address: string) => {
     if (!address) return "";
@@ -31,6 +47,8 @@ export default function Home() {
       return;
     }
     try {
+      Loading.standard();
+
       console.log("publicKey:", publicKey);
       const instruction = await createBuyInstruction(
         normalizedPublicKey!,
@@ -59,9 +77,12 @@ export default function Home() {
         "confirmed"
       );
       console.log("Transaction confirmed:", confirmation);
-
+      Loading.remove();
+      const txUrl = `https://explorer.solana.com/tx/${signature}`;
+      addLog(`Transaction URL: ${txUrl}`);
       alert("Purchase successful!");
     } catch (error) {
+      Loading.remove();
       console.error("Error:", error);
       throw error;
     }
@@ -125,6 +146,29 @@ export default function Home() {
         >
           {connected ? "Buy a Coin" : "Connect Wallet"}
         </button>
+        <div className="w-full mt-8">
+          <h3 className="text-lg font-semibold mb-2">Transaction Logs</h3>
+          <div className="bg-gray-900 text-green-400 p-4 rounded-lg h-48 overflow-y-auto font-mono text-sm">
+            {txLogs.length === 0 ? (
+              <p className="text-gray-500">No transaction logs yet...</p>
+            ) : (
+              txLogs.map((log, index) => (
+                <div key={index} className="mb-1">
+                  <span className="text-gray-500">[{log.timestamp}]</span>{" "}
+                  {log.message}
+                </div>
+              ))
+            )}
+          </div>
+          {txLogs.length > 0 && (
+            <button
+              onClick={() => setTxLogs([])}
+              className="mt-2 text-sm text-gray-500 hover:text-gray-400"
+            >
+              Clear logs
+            </button>
+          )}
+        </div>
       </main>
     </div>
   );
