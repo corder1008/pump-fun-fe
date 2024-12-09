@@ -1,9 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { useWallet } from "@solana/wallet-adapter-react";
 import { Header } from "./components/Header";
-import { Transaction, Connection } from "@solana/web3.js";
+import { Transaction, Connection, PublicKey } from "@solana/web3.js";
 import { SpinWheel } from "react-spin-wheel";
 
 import "react-spin-wheel/dist/index.css";
@@ -12,28 +12,18 @@ import { createBuyInstruction } from "./utils/buyCoin";
 export default function Home() {
   const [solAmount, setSolAmount] = useState("");
   const [selectedAddress, setSelectedAddress] = useState("");
-  const [selectedTokenAssociatedAddress, setSelectedTokenAssociatedAddress] =
-    useState("");
   const { connected, publicKey } = useWallet();
   const { sendTransaction } = useWallet();
-
-  useEffect(() => {
-    console.log(selectedAddress);
-  }, [selectedAddress]);
+  const normalizedPublicKey = publicKey
+    ? new PublicKey(publicKey.toString())
+    : null;
 
   const shortenAddress = (address: string) => {
     if (!address) return "";
     return `${address.slice(0, 4)}...${address.slice(-4)}`;
   };
 
-  const buyCoin = async (
-    tokenAddress: string,
-    tokenAssociatedAddress: string,
-    amount: number
-  ) => {
-    console.log("tokenAddress:", tokenAddress);
-    console.log("tokenAssociatedAddress:", tokenAssociatedAddress);
-    console.log("amount:", amount);
+  const buyCoin = async (tokenAddress: string, amount: number) => {
     const txBuilder = new Transaction();
     const connection = new Connection(process.env.NEXT_PUBLIC_RPC_URL!);
     if (!connected || !publicKey) {
@@ -43,7 +33,7 @@ export default function Home() {
     try {
       console.log("publicKey:", publicKey);
       const instruction = await createBuyInstruction(
-        publicKey,
+        normalizedPublicKey!,
         tokenAddress,
         amount,
         txBuilder
@@ -116,10 +106,6 @@ export default function Home() {
                 (addr) => addr.value === item
               )?.id;
               setSelectedAddress(fullAddress?.tokenAddress as string);
-              setSelectedTokenAssociatedAddress(
-                addresses.find((addr) => addr.value === item)
-                  ?.tokenAssociatedAddress || ""
-              );
             }}
             size={300}
           />
@@ -134,11 +120,7 @@ export default function Home() {
         <button
           className="bg-green-500 text-white px-4 py-2 rounded"
           onClick={async () =>
-            await buyCoin(
-              selectedAddress,
-              selectedTokenAssociatedAddress,
-              parseFloat(solAmount)
-            )
+            await buyCoin(selectedAddress, parseFloat(solAmount))
           }
         >
           {connected ? "Buy a Coin" : "Connect Wallet"}
