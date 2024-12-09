@@ -16,6 +16,7 @@ export default function Home() {
   const { sendTransaction } = useWallet();
   const [isSpinning, setIsSpinning] = useState(false);
   const predefinedAmounts = [0.1, 0.5, 1, 2, 5, 10];
+  const [selectedAddress, setSelectedAddress] = useState("");
 
   const normalizedPublicKey = publicKey
     ? new PublicKey(publicKey.toString())
@@ -41,7 +42,7 @@ export default function Home() {
     return `${address.slice(0, 4)}...${address.slice(-4)}`;
   };
 
-  const buyCoin = () => {
+  const buyCoin = async () => {
     if (!connected || !publicKey) {
       alert("Please connect your wallet first!");
       return;
@@ -51,59 +52,64 @@ export default function Home() {
       return;
     }
 
-    setIsSpinning(true);
-  };
-
-  const handleTransaction = async (tokenAddress: string, amount: number) => {
-    const txBuilder = new Transaction();
-    const connection = new Connection(process.env.NEXT_PUBLIC_RPC_URL!);
-    if (!connected || !publicKey) {
-      alert("Please connect your wallet first!");
-      return;
-    }
     try {
+      // Randomly select a token address
+      const randomIndex = Math.floor(Math.random() * addresses.length);
+      const selectedToken = addresses[randomIndex];
+
       Loading.standard();
-      const tokenData = await getTokenData(tokenAddress);
-      console.log("tokenData:", tokenData["symbol"]);
+
+      // Perform the transaction
+      const txBuilder = new Transaction();
+      const connection = new Connection(process.env.NEXT_PUBLIC_RPC_URL!);
+
+      const tokenData = await getTokenData(selectedToken.id.tokenAddress);
+      console.log("tokenDataAddress", selectedToken.id.tokenAddress);
+      // After successful transaction, start the spin animation
+
       const instruction = await createBuyInstruction(
         normalizedPublicKey!,
-        tokenAddress,
-        amount,
+        selectedToken.id.tokenAddress,
+        parseFloat(solAmount),
         txBuilder,
         tokenData
       );
+
       txBuilder.add(instruction.instruction);
       txBuilder.feePayer = publicKey;
 
       try {
         const signature = await sendTransaction(txBuilder, connection);
-        console.log("Transaction sent:", signature);
-
         const confirmation = await connection.confirmTransaction(
           signature,
           "confirmed"
         );
-        console.log("Transaction confirmed:", confirmation);
         Loading.remove();
+        console.log("confirmation", confirmation);
+
+        setIsSpinning(true);
+
+        // Store the selected token to use in onFinishSpin
+        setSelectedAddress(selectedToken.id.tokenAddress);
+
         const txUrl = `https://explorer.solana.com/tx/${signature}`;
         addLog(
-          `You received ${instruction.tokenAmount} ${tokenData["symbol"]} tokens for ${amount} SOL - ${txUrl}`
+          `You received ${instruction.tokenAmount} ${tokenData["symbol"]} tokens for ${solAmount} SOL - ${txUrl}`
         );
-        alert("Purchase successful!");
       } catch (txError: any) {
         Loading.remove();
         if (txError.message.includes("User rejected")) {
           addLog("Transaction cancelled by user");
-          console.log("User cancelled the transaction");
-          return; // Exit gracefully
+          return;
         }
         addLog(`Transaction failed: ${txError.message}`);
         throw txError;
       }
-    } catch (error) {
+    } catch (error: any) {
       Loading.remove();
       console.error("Error:", error);
-      throw error;
+      addLog(`Error: ${error.message}`);
+      alert(`Transaction failed: ${error.message}`);
     }
   };
 
@@ -129,14 +135,8 @@ export default function Home() {
       tokenAssociatedAddress: "49jardH1HcrP6k8Y16Dg7XEz6hz3SiftALKNht3aHzac",
     },
   ].map((address) => ({
-    id: address, // original address for internal use
+    id: address,
     value: shortenAddress(address.tokenAddress), // shortened address for display
-    tokenAssociatedAddress: address.tokenAssociatedAddress,
-  }));
-
-  const wheelItems = addresses.map((addr) => ({
-    value: addr.value,
-    tokenAddress: addr.id.tokenAddress,
   }));
 
   return (
@@ -145,15 +145,15 @@ export default function Home() {
       <main className="flex flex-col gap-8 row-start-2 items-center w-full">
         <div className="wheel-container">
           <SpinWheel
-            items={wheelItems}
-            onFinishSpin={async (selectedItem) => {
+            items={addresses.map((addr) => ({
+              value: addr.value,
+              tokenAddress: addr.id.tokenAddress,
+            }))}
+            onFinishSpin={() => {
               setIsSpinning(false);
-              await handleTransaction(
-                selectedItem.tokenAddress,
-                parseFloat(solAmount)
-              );
             }}
             isSpinning={isSpinning}
+            selectedAddress={selectedAddress} // Pass the selected address
           />
         </div>
         <input
