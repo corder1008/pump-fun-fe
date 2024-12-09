@@ -14,8 +14,9 @@ import axios from "axios";
 
 async function getTokenData(mintStr: string) {
   try {
-    const url = `/api/coins/${mintStr}`;
-    const response = await axios.get(url);
+    const url = `/api/coins`;
+    const response = await axios.post(url, { mintStr });
+
     if (response.status === 200) {
       return response.data;
     } else {
