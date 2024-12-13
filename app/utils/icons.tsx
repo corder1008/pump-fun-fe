@@ -1,5 +1,3 @@
-import { Icon } from "next/dist/lib/metadata/types/metadata-types";
-
 interface IconProps {
   active?: boolean;
 }

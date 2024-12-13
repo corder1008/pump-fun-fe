@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useWallet } from "@solana/wallet-adapter-react";
 import { Header } from "../components/Header";
@@ -19,6 +19,10 @@ export default function Home() {
   const predefinedAmounts = [0.1, 0.5, 1, 2, 5, 10];
   const [selectedAddress, setSelectedAddress] = useState("");
   const [totalSpins, setTotalSpins] = useState(0);
+
+  useEffect(() => {
+    setTotalSpins(0);
+  }, []);
 
   const normalizedPublicKey = publicKey
     ? new PublicKey(publicKey.toString())
