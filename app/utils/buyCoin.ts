@@ -12,7 +12,11 @@ import {
 } from "@solana/spl-token";
 import axios from "axios";
 
-export async function getTokenData(mintStr: string, retries = 5, delay = 6000) {
+export async function getTokenData(
+  mintStr: string,
+  retries = 10,
+  delay = 6000
+) {
   const url = `/api/coins`;
 
   for (let attempt = 0; attempt < retries; attempt++) {
